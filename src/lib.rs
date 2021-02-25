@@ -52,9 +52,6 @@ use std::{
 use tokio::net::{TcpListener, TcpStream};
 use tokio_socks::{tcp::Socks5Stream, IntoTargetAddr};
 
-/// Default port for the Tor SOCKS5 proxy.
-const DEFAULT_SOCKS_PORT: u16 = 9050;
-
 /// Represents the configuration for a TCP/IP transport capability for libp2p.
 ///
 /// The TCP sockets created by libp2p will need to be progressed by running the
@@ -109,20 +106,6 @@ impl Socks5TokioTcpConfig {
     pub fn socks_port(mut self, port: u16) -> Self {
         self.socks_port = port;
         self
-    }
-}
-
-impl Default for Socks5TokioTcpConfig {
-    /// Creates a new configuration object for TCP/IP using the default Tor
-    /// SOCKS5 port - 9050.
-    fn default() -> Self {
-        Self {
-            sleep_on_error: Duration::from_millis(100),
-            ttl: None,
-            nodelay: None,
-            onion_map: HashMap::new(),
-            socks_port: DEFAULT_SOCKS_PORT,
-        }
     }
 }
 

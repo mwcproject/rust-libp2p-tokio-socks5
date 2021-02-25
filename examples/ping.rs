@@ -36,8 +36,9 @@ use structopt::StructOpt;
 use libp2p_tokio_socks5::Socks5TokioTcpConfig;
 
 /// The ping-pong onion service address.
-const ONION: &str = "/onion3/7gr3dngwhk74thi4vv6bm3v3bicaxe4apvcemoxo3hadpvsyfifjqnid:7";
+const ONION: &str = "/onion3/3auvu6236uq7cpdgmlc43hcy7emeasnubz7rzvtog3bo5z7bhdfagpyd:81";
 const LOCAL_PORT: u16 = 7777;
+const TOR_SOCKS_PORT: u16 = 51234;
 
 /// Tor should be started with a hidden service configured. Add the following to
 /// your torrc
@@ -94,7 +95,7 @@ async fn run_dialer(addr: Multiaddr) -> Result<()> {
     let config = PingConfig::new()
         .with_keep_alive(true)
         .with_interval(Duration::from_secs(1));
-    let mut swarm = build_swarm(config, map)?;
+    let mut swarm = build_swarm( TOR_SOCKS_PORT, config, map)?;
 
     Swarm::dial_addr(&mut swarm, addr).unwrap();
 
@@ -116,7 +117,7 @@ async fn run_listener(onion: Multiaddr) -> Result<()> {
     log::info!("Onion service: {}", onion);
 
     let config = PingConfig::new().with_keep_alive(true);
-    let mut swarm = build_swarm(config, map)?;
+    let mut swarm = build_swarm(TOR_SOCKS_PORT, config, map)?;
 
     Swarm::listen_on(&mut swarm, onion.clone())?;
 
@@ -133,11 +134,11 @@ async fn run_listener(onion: Multiaddr) -> Result<()> {
 }
 
 /// Build a libp2p swarm.
-pub fn build_swarm(config: PingConfig, map: HashMap<Multiaddr, u16>) -> Result<Swarm<Ping>> {
+pub fn build_swarm( tor_socks_port: u16, config: PingConfig, map: HashMap<Multiaddr, u16>) -> Result<Swarm<Ping>> {
     let id_keys = Keypair::generate_ed25519();
-    let peer_id = PeerId::from(id_keys.public());
+    let peer_id = PeerId::from_public_key(id_keys.public(), ONION.to_string());
 
-    let transport = build_transport(id_keys, map)?;
+    let transport = build_transport( tor_socks_port, id_keys, map )?;
     let behaviour = Ping::new(config);
 
     let swarm = SwarmBuilder::new(transport, behaviour, peer_id)
@@ -166,14 +167,16 @@ impl libp2p::core::Executor for TokioExecutor {
 /// - DNS name resolution
 /// - Authentication via noise
 /// - Multiplexing via yamux or mplex
+/// - tor_socks_port  - tor SOCKS port for sender. Default is 9050
 fn build_transport(
+    tor_socks_port: u16,
     id_keys: Keypair,
     map: HashMap<Multiaddr, u16>,
 ) -> anyhow::Result<PingPongTransport> {
     let dh_keys = noise::Keypair::<X25519Spec>::new().into_authentic(&id_keys)?;
-    let noise = NoiseConfig::xx(dh_keys).into_authenticated();
+    let noise = NoiseConfig::xx(dh_keys).into_authenticated(ONION.to_string());
 
-    let tcp = Socks5TokioTcpConfig::default().nodelay(true).onion_map(map);
+    let tcp = Socks5TokioTcpConfig::new(tor_socks_port).nodelay(true).onion_map(map);
     let transport = DnsConfig::new(tcp)?;
 
     let transport = transport
