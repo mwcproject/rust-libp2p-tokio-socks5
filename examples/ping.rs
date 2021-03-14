@@ -135,8 +135,9 @@ async fn run_listener(onion: Multiaddr) -> Result<()> {
 
 /// Build a libp2p swarm.
 pub fn build_swarm( tor_socks_port: u16, config: PingConfig, map: HashMap<Multiaddr, u16>) -> Result<Swarm<Ping>> {
+    // Note, on order to make discovery working, ed25519 must be constructed form key that match tor public address.
     let id_keys = Keypair::generate_ed25519();
-    let peer_id = PeerId::from_public_key(id_keys.public(), ONION.to_string());
+    let peer_id = PeerId::from_public_key(id_keys.public());
 
     let transport = build_transport( tor_socks_port, id_keys, map )?;
     let behaviour = Ping::new(config);
@@ -174,7 +175,7 @@ fn build_transport(
     map: HashMap<Multiaddr, u16>,
 ) -> anyhow::Result<PingPongTransport> {
     let dh_keys = noise::Keypair::<X25519Spec>::new().into_authentic(&id_keys)?;
-    let noise = NoiseConfig::xx(dh_keys).into_authenticated(ONION.to_string());
+    let noise = NoiseConfig::xx(dh_keys).into_authenticated();
 
     let tcp = Socks5TokioTcpConfig::new(tor_socks_port).nodelay(true).onion_map(map);
     let transport = DnsConfig::new(tcp)?;
