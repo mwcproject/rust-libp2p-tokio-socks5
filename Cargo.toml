@@ -14,7 +14,7 @@ exclude = ["rustfmt.toml"]
 data-encoding = "2.3"
 futures = "0.3"
 futures-timer = "3.0"
-get_if_addrs = "0.5"
+if-addrs = "0.6.5"
 ipnet = "2.3"
 libp2p = { git = "https://github.com/mwcproject/rust-libp2p", branch = "master", default-features = false }
 #libp2p = { path = "../rust-libp2p", default-features = false }
