@@ -15,7 +15,7 @@ use std::{
 
 use anyhow::Result;
 use futures::{future, prelude::*};
-use libp2p::{
+use mwc_libp2p::{
     core::{
         muxing::StreamMuxerBox,
         transport::Boxed,

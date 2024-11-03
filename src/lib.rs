@@ -33,7 +33,7 @@ use futures::{
 use futures_timer::Delay;
 use if_addrs::{get_if_addrs, IfAddr};
 use ipnet::{IpNet, Ipv4Net, Ipv6Net};
-use libp2p::core::{
+use mwc_libp2p::core::{
     multiaddr::{Multiaddr, Protocol},
     transport::{ListenerEvent, TransportError},
     Transport,
