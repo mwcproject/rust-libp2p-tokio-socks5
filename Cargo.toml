@@ -1,5 +1,5 @@
 [package]
-name = "libp2p-tokio-socks5"
+name = "mwc-libp2p-tokio-socks5"
 edition = "2018"
 description = "TCP/IP (via a SOCKS5 proxy) transport protocol for libp2p"
 version = "0.7.1"
